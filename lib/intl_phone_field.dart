@@ -11,6 +11,9 @@ import './countries.dart';
 import './phone_number.dart';
 
 class IntlPhoneField extends StatefulWidget {
+  /// Context menu builder - added by Andy
+  final Widget Function(BuildContext, EditableTextState)? contextMenuBuilder;
+
   /// Whether to hide the text being edited (e.g., for passwords).
   final bool obscureText;
 
@@ -245,6 +248,7 @@ class IntlPhoneField extends StatefulWidget {
 
   const IntlPhoneField({
     Key? key,
+    this.contextMenuBuilder,
     this.initialCountryCode,
     this.languageCode = 'en',
     this.disableAutoFillHints = false,
@@ -374,6 +378,7 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      contextMenuBuilder: widget.contextMenuBuilder,
       initialValue: (widget.controller == null) ? number : null,
       autofillHints: widget.disableAutoFillHints ? null : [AutofillHints.telephoneNumberNational],
       readOnly: widget.readOnly,
