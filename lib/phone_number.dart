@@ -41,27 +41,32 @@ class PhoneNumber {
   }
 
   bool isValidNumber() {
-    // Check for countries that share the same dial code, but have different number lengths.
     final formattedNumber = completeNumber.startsWith('+') ? completeNumber.substring(1) : completeNumber;
-    if (formattedNumber.startsWith('358') && number.length == 12 || number.length == 15) {
-      return true;
-    } else if (formattedNumber.startsWith('590') && number.length == 9 || number.length == 15) {
-      return true;
-    } else if (formattedNumber.startsWith('262') && number.length == 9 || number.length == 15) {
-      return true;
-    } else if (formattedNumber.startsWith('44') && number.length == 6 || number.length == 10) {
-      return true;
-    }
+    // Find all countries that match the dial code (some share the same code
+    // but have different valid number lengths, e.g. +44, +262, +358, +590).
+    final matchingCountries =
+        countries.where((country) => formattedNumber.startsWith(country.dialCode + country.regionCode));
 
-    Country country = getCountry(completeNumber);
-    if (number.length < country.minLength) {
+    if (matchingCountries.isEmpty) {
       throw NumberTooShortException();
     }
 
-    if (number.length > country.maxLength) {
+    // If any matching country considers the number length valid, accept it.
+    final isValid = matchingCountries.any(
+      (country) {
+        return number.length >= country.minLength && number.length <= country.maxLength;
+      },
+    );
+
+    if (isValid) return true;
+
+    if (matchingCountries.every((country) => number.length < country.minLength)) {
+      throw NumberTooShortException();
+    } else if (matchingCountries.every((country) => number.length > country.maxLength)) {
       throw NumberTooLongException();
+    } else {
+      throw InvalidCharactersException();
     }
-    return true;
   }
 
   String get completeNumber {
