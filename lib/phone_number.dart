@@ -41,6 +41,18 @@ class PhoneNumber {
   }
 
   bool isValidNumber() {
+    // Check for countries that share the same dial code, but have different number lengths.
+    final formattedNumber = completeNumber.startsWith('+') ? completeNumber.substring(1) : completeNumber;
+    if (formattedNumber.startsWith('358') && number.length == 12 || number.length == 15) {
+      return true;
+    } else if (formattedNumber.startsWith('590') && number.length == 9 || number.length == 15) {
+      return true;
+    } else if (formattedNumber.startsWith('262') && number.length == 9 || number.length == 15) {
+      return true;
+    } else if (formattedNumber.startsWith('44') && number.length == 6 || number.length == 10) {
+      return true;
+    }
+
     Country country = getCountry(completeNumber);
     if (number.length < country.minLength) {
       throw NumberTooShortException();
