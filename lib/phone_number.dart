@@ -41,31 +41,39 @@ class PhoneNumber {
   }
 
   bool isValidNumber() {
-    final formattedNumber = completeNumber.startsWith('+') ? completeNumber.substring(1) : completeNumber;
-    // Find all countries that match the dial code (some share the same code
-    // but have different valid number lengths, e.g. +44, +262, +358, +590).
-    final matchingCountries =
-        countries.where((country) => formattedNumber.startsWith(country.dialCode + country.regionCode));
+    try {
+      final formattedNumber = completeNumber.startsWith('+') ? completeNumber.substring(1) : completeNumber;
+      // Find all countries that match the dial code (some share the same code
+      // but have different valid number lengths, e.g. +44, +262, +358, +590).
+      final matchingCountries =
+          countries.where((country) => formattedNumber.startsWith(country.dialCode + country.regionCode));
 
-    if (matchingCountries.isEmpty) {
-      throw NumberTooShortException();
-    }
+      if (matchingCountries.isEmpty) {
+        throw NumberTooShortException();
+      }
 
-    // If any matching country considers the number length valid, accept it.
-    final isValid = matchingCountries.any(
-      (country) {
-        return number.length >= country.minLength && number.length <= country.maxLength;
-      },
-    );
+      // If any matching country considers the number length valid, accept it.
+      final isValid = matchingCountries.any(
+        (country) {
+          return number.length >= country.minLength && number.length <= country.maxLength;
+        },
+      );
 
-    if (isValid) return true;
+      if (isValid) return true;
 
-    if (matchingCountries.every((country) => number.length < country.minLength)) {
-      throw NumberTooShortException();
-    } else if (matchingCountries.every((country) => number.length > country.maxLength)) {
-      throw NumberTooLongException();
-    } else {
-      throw InvalidCharactersException();
+      if (matchingCountries.every((country) => number.length < country.minLength)) {
+        throw NumberTooShortException();
+      } else if (matchingCountries.every((country) => number.length > country.maxLength)) {
+        throw NumberTooLongException();
+      } else {
+        throw InvalidCharactersException();
+      }
+    } catch (e) {
+      if (e is! NumberTooShortException && e is! NumberTooLongException && e is! InvalidCharactersException) {
+        throw "Invalid phone number";
+      } else {
+        rethrow;
+      }
     }
   }
 
@@ -74,21 +82,29 @@ class PhoneNumber {
   }
 
   static Country getCountry(String phoneNumber) {
-    if (phoneNumber == "") {
-      throw NumberTooShortException();
-    }
+    try {
+      if (phoneNumber == "") {
+        throw NumberTooShortException();
+      }
 
-    final validPhoneNumber = RegExp(r'^[+0-9]*[0-9]*$');
+      final validPhoneNumber = RegExp(r'^[+0-9]*[0-9]*$');
 
-    if (!validPhoneNumber.hasMatch(phoneNumber)) {
-      throw InvalidCharactersException();
-    }
+      if (!validPhoneNumber.hasMatch(phoneNumber)) {
+        throw InvalidCharactersException();
+      }
 
-    if (phoneNumber.startsWith('+')) {
-      return countries
-          .firstWhere((country) => phoneNumber.substring(1).startsWith(country.dialCode + country.regionCode));
+      if (phoneNumber.startsWith('+')) {
+        return countries
+            .firstWhere((country) => phoneNumber.substring(1).startsWith(country.dialCode + country.regionCode));
+      }
+      return countries.firstWhere((country) => phoneNumber.startsWith(country.dialCode + country.regionCode));
+    } catch (e) {
+      if (e is StateError) {
+        throw "Invalid or missing country code in phone number";
+      } else {
+        throw "Invalid phone number";
+      }
     }
-    return countries.firstWhere((country) => phoneNumber.startsWith(country.dialCode + country.regionCode));
   }
 
   @override
